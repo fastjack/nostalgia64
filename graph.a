@@ -1,4 +1,4 @@
-; Die Routine versucht, die X- und Y-Koordinaten unverändert zu belassen. Ohne diese Beschränkung
+; Die Routine läßt die X- und Y-Koordinaten unverändert. Ohne diese Beschränkung
 ; könnte man sich einige Kopieroperationen sparen.
 
 	*=$c000
@@ -58,7 +58,7 @@
 	and #%00000111
 	adc operator1
 	sta operator1
-	lda operator1+1	; wäre eine combo aus bcc+inc vielecht schneller?
+	lda operator1+1	; wäre eine combo aus bcc+inc vieleicht schneller?
 	adc #0
 	sta operator1+1
 	
