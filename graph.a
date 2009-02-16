@@ -46,14 +46,20 @@
 	rol operator2+1	; und hier insgesamt mit 256 multipliziert
 	
 	; beides addieren und die untersten 3 bits der y-koordinate gleich dazurechnen. 
-	lda y_coord
-	and #%00000111
 	clc
-	adc operator1
+	lda operator1
 	adc operator2
 	sta operator1
 	lda operator1+1
 	adc operator2+1
+	sta operator1+1
+	clc
+	lda y_coord
+	and #%00000111
+	adc operator1
+	sta operator1
+	lda operator1+1	; wäre eine combo aus bcc+inc vielecht schneller?
+	adc #0
 	sta operator1+1
 	
 	; jetzt noch x_coord >> 3 dazu addieren
