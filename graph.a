@@ -1,0 +1,98 @@
+; Die Routine versucht, die X- und Y-Koordinaten unverändert zu belassen. Ohne diese Beschränkung
+; könnte man sich einige Kopieroperationen sparen.
+
+	*=$c000
+	!to "graph.prg", cbm
+; Unbenutzte Stellen in der Zero-Page für Koordinaten verwenden
+	x_coord = $03		; X-Koordinate in $03/$04
+	y_coord = $05		; Y-Koordinate in $05
+	
+	bitmap_base = $2000	; Anfang des Grafikspeichers für Bitmaps
+	scratch_space = $fb	; Puffer für Zwischenberechnungen (laut memory-map unbenutzt)
+	operator1 = scratch_space
+	operator2 = scratch_space+2
+	offset = scratch_space	; hier liegt die adresse des bytes, in dem der punkt gezeichnet wird
+	
+; offset = (y_coord & $fff8) * 8 * 40 + (y_coord & $0007) + (x_coord >> 3)
+	; x_coord & $fff8
+	lda x_coord
+	sta operator1
+	lda x_coord+1
+	and #$f8
+	sta operator1+1
+	
+	; * 320 (*64 + *256) ohne Schleifen, in der Hoffnung, daß es schneller ist
+	asl operator1
+	rol operator1+1
+	asl operator1
+	rol operator1+1
+	asl operator1
+	rol operator1+1
+	asl operator1
+	rol operator1+1
+	asl operator1
+	rol operator1+1
+	asl operator1
+	rol operator1+1	; mit 64 multipliziert
+	
+	lda operator1
+	sta operator2
+	lda operator1+1
+	sta operator2+1	; kopieren
+
+	asl operator2
+	rol operator2+1
+	asl operator2
+	rol operator2+1	; und hier insgesamt mit 256 multipliziert
+	
+	; beides addieren und die untersten 3 bits der y-koordinate gleich dazurechnen. 
+	lda y_coord
+	and #%00000111
+	clc
+	adc operator1
+	adc operator2
+	sta operator1
+	lda operator1+1
+	adc operator2+1
+	sta operator1+1
+	
+	; jetzt noch x_coord >> 3 dazu addieren
+	lda x_coord
+	sta operator2
+	lda x_coord+1
+	sta operator2+1
+	lsr operator2+1
+	ror operator2
+	lsr operator2+1
+	ror operator2
+	lsr operator2+1
+	ror operator2
+
+	clc
+	lda operator1
+	adc operator2
+	sta operator1
+	lda operator1+1
+	adc operator2+1
+	sta operator1+1
+	
+; Das Offset innerhalb des Grafikspeichers ist nun berechnet.
+
+	clc			; jetzt noch die absolute adresse im speicher errechnen
+	lda offset
+	adc #<bitmap_base
+	sta offset
+	lda offset+1
+	adc #>bitmap_base
+	sta offset+1
+	
+	ldy #$00
+	lda x_coord
+	and #%00000111		; nur die untersten 3 bits sind interessant
+	tay
+	lda (offset),y
+	ora powers,x
+	sta (offset),y
+	rts
+	
+powers:	!byte $80, $40, $20, $10, $08, $04, $02, $01
