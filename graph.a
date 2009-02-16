@@ -16,9 +16,9 @@
 ; offset = (y_coord & $fff8) * 8 * 40 + (y_coord & $0007) + (x_coord >> 3)
 	; x_coord & $fff8
 	lda x_coord
+	and #$f8
 	sta operator1
 	lda x_coord+1
-	and #$f8
 	sta operator1+1
 	
 	; * 320 (*64 + *256) ohne Schleifen, in der Hoffnung, daß es schneller ist
