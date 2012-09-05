@@ -45,10 +45,9 @@ clear_screen:
 	lda #0		; füllwert
 	tay		; index
 	tax		; zähler für 256-byte pages
-clear_loop:
-	sta (scratch_space),y
+-	sta (scratch_space),y
 	iny
-	bne clear_loop
+	bne -
 	inc scratch_space+1	; nur hi-byte inkrementieren. rest wird über x-register addressiert
 	inx
 	cpx #$20		; 32*256 bytes gelöscht?
